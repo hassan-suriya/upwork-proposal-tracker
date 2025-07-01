@@ -2,12 +2,12 @@ import jwt from 'jsonwebtoken';
 import { cookies } from 'next/headers';
 import { NextRequest } from 'next/server';
 
-// Use environment variable for JWT_SECRET
-const JWT_SECRET = process.env.JWT_SECRET || '';
+// Use environment variable for JWT_SECRET with a fallback for development
+const JWT_SECRET = process.env.JWT_SECRET || 'dev-jwt-secret-should-be-changed-in-production';
 
-// Check if JWT_SECRET is missing in production
-if (!JWT_SECRET && process.env.NODE_ENV === 'production') {
-  console.error('WARNING: JWT_SECRET is not set in production environment!');
+// Check if JWT_SECRET is the default in production
+if (JWT_SECRET === 'dev-jwt-secret-should-be-changed-in-production' && process.env.NODE_ENV === 'production') {
+  console.error('WARNING: Using default JWT_SECRET in production environment! Please set a proper JWT_SECRET.');
 }
 
 export interface TokenPayload {
@@ -17,29 +17,30 @@ export interface TokenPayload {
 }
 
 export function signToken(payload: TokenPayload): string {
-  if (!JWT_SECRET) {
-    throw new Error('JWT_SECRET is not defined');
+  try {
+    return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' }); // Extended to 7 days for better user experience
+  } catch (error) {
+    console.error('Failed to sign JWT token:', error);
+    throw new Error('Authentication system error - token signing failed');
   }
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '1d' });
 }
 
 export function verifyToken(token: string): TokenPayload | null {
   try {
-    if (!JWT_SECRET) {
-      console.error('JWT_SECRET is not defined');
+    if (!token || token === 'undefined' || token === 'null') {
+      console.error('Invalid token provided for verification');
       return null;
     }
     
-    console.log('Verifying token with secret length:', JWT_SECRET.length);
+    console.log('Verifying token with secret available:', !!JWT_SECRET);
     const decoded = jwt.verify(token, JWT_SECRET) as TokenPayload;
     
     // Validate that the decoded token has the required fields
     if (!decoded.userId || !decoded.email || !decoded.role) {
-      console.error('Token is missing required fields:', decoded);
+      console.error('Token is missing required fields');
       return null;
     }
     
-    console.log('Token verified successfully:', decoded.email);
     return decoded;
   } catch (error: any) {
     console.error('Token verification failed:', error?.message || 'Unknown error');
@@ -48,15 +49,39 @@ export function verifyToken(token: string): TokenPayload | null {
 }
 
 export async function setTokenCookie(token: string) {
-  const cookieStore = await cookies();
-  cookieStore.set({
-    name: 'token',
-    value: token,
-    httpOnly: true,
-    path: '/',
-    secure: process.env.NODE_ENV === 'production',
-    maxAge: 60 * 60 * 24, // 1 day
-  });
+  try {
+    const cookieStore = await cookies();
+    
+    // Get domain for production
+    const domain = process.env.NODE_ENV === 'production' 
+      ? process.env.COOKIE_DOMAIN || undefined 
+      : undefined;
+    
+    cookieStore.set({
+      name: 'token',
+      value: token,
+      httpOnly: true,
+      path: '/',
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+      sameSite: 'lax',
+      domain: domain,
+    });
+    
+    // Also set a non-HTTP-only cookie for client-side auth status checking
+    cookieStore.set({
+      name: 'auth-status',
+      value: 'logged-in',
+      httpOnly: false,
+      path: '/',
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+      sameSite: 'lax',
+      domain: domain,
+    });
+  } catch (error) {
+    console.error('Failed to set auth cookies:', error);
+  }
 }
 
 export function createCookieString(token: string): string {

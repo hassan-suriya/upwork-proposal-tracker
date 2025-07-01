@@ -10,16 +10,49 @@ const isBrowser = (): boolean => {
 
 // Set the in-memory token
 export function setAuthToken(token: string): void {
+  if (!token || token === 'undefined' || token === 'null') {
+    console.warn("Attempted to set invalid auth token");
+    return;
+  }
+  
   if (isBrowser()) {
-    console.log("Setting auth token in memory, token length:", token.length);
+    console.log("Setting auth token in memory");
     inMemoryToken = token;
     // Also try to set in localStorage for persistence (may not work in all browsers)
     try {
       localStorage.setItem('auth_token', token); // Store the actual token
       localStorage.setItem('auth_token_timestamp', Date.now().toString());
+      
+      // Also set a secondary flag that's easier to read
+      localStorage.setItem('is_authenticated', 'true');
       console.log("Auth token stored in localStorage");
     } catch (e) {
       console.warn('Could not access localStorage', e);
+    }
+  }
+}
+
+// Clear the auth token (for logout)
+export function clearAuthToken(): void {
+  if (isBrowser()) {
+    inMemoryToken = null;
+    try {
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('auth_token_timestamp');
+      localStorage.removeItem('is_authenticated');
+    } catch (e) {
+      console.warn('Could not access localStorage', e);
+    }
+    
+    // Also clear any auth cookies
+    document.cookie = 'token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+    document.cookie = 'auth-status=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+    
+    // If in production, also try to clear domain cookies
+    if (window.location.hostname.includes('.')) {
+      const domain = window.location.hostname;
+      document.cookie = `token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; Domain=${domain};`;
+      document.cookie = `auth-status=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; Domain=${domain};`;
     }
   }
 }
@@ -40,17 +73,20 @@ export function hasAuthToken(): boolean {
   
   // First check in-memory token
   if (inMemoryToken) {
-    console.log('Auth token found in memory');
     return true;
   }
   
   // Then check if there's an actual token in localStorage
   try {
     const localToken = localStorage.getItem('auth_token');
-    if (localToken) {
-      console.log('Auth token found in localStorage');
+    if (localToken && localToken !== 'undefined' && localToken !== 'null') {
       // Restore token to memory
       inMemoryToken = localToken;
+      return true;
+    }
+    
+    // Check for secondary auth flag
+    if (localStorage.getItem('is_authenticated') === 'true') {
       return true;
     }
   } catch (e) {
@@ -59,8 +95,7 @@ export function hasAuthToken(): boolean {
   
   // Then check cookies
   const cookieToken = getCookie('token');
-  if (cookieToken) {
-    console.log('Auth token found in cookie');
+  if (cookieToken && cookieToken !== 'undefined' && cookieToken !== 'null') {
     // Restore token to memory
     inMemoryToken = cookieToken;
     return true;
@@ -83,7 +118,7 @@ export function hasAuthToken(): boolean {
     console.warn('Could not access localStorage', e);
   }
   
-  console.log('No auth token found, status cookie:', hasStatusCookie, 'valid timestamp:', hasValidTimestamp);
+  console.log('Auth status check - status cookie:', hasStatusCookie, 'valid timestamp:', hasValidTimestamp);
   return hasStatusCookie || hasValidTimestamp;
 }
 
@@ -93,15 +128,13 @@ export function getAuthToken(): string | undefined {
   
   // First check in-memory token
   if (inMemoryToken) {
-    console.log("Retrieved token from memory");
     return inMemoryToken;
   }
   
   // Then check localStorage (useful after page refresh)
   try {
     const localToken = localStorage.getItem('auth_token');
-    if (localToken) {
-      console.log("Retrieved token from localStorage");
+    if (localToken && localToken !== 'undefined' && localToken !== 'null') {
       inMemoryToken = localToken; // Restore to memory
       return localToken;
     }
@@ -109,102 +142,38 @@ export function getAuthToken(): string | undefined {
     console.warn('Could not access localStorage', e);
   }
   
-  // Finally fallback to cookie
-  const cookieToken = getCookie('token');
-  if (cookieToken) {
-    console.log("Retrieved token from cookie");
-    return cookieToken;
+  // Finally check for httpOnly cookie through an API call
+  // This is a fallback and will trigger an API request
+  const hasStatusCookie = getCookie('auth-status') === 'logged-in';
+  if (hasStatusCookie) {
+    console.log('Auth status cookie found, but no token in memory or localStorage');
+    // Will need to rely on cookie-based auth for API calls
+    return 'cookie-based-auth';
   }
   
-  console.warn("No auth token found in client");
   return undefined;
 }
 
-// Logout function
-export function logout(redirectToLogin = true) {
-  if (!isBrowser()) return;
-  
-  console.log('Logging out user, clearing all auth tokens');
-  
-  // Clear in-memory token
-  inMemoryToken = null;
-  
-  // Clear localStorage
-  try {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('auth_token_timestamp');
-    console.log('Cleared localStorage auth tokens');
-  } catch (e) {
-    console.warn('Could not access localStorage during logout', e);
-  }
-  
-  // Clear cookies - use secure way to clear cookies
-  const cookiesToClear = ['token', 'auth-status'];
-  cookiesToClear.forEach(cookieName => {
-    document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; Secure; SameSite=Strict;`;
-    document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-  });
-  
-  console.log('Cleared auth cookies');
-  
-  // Only redirect if requested (to prevent infinite loops)
-  if (redirectToLogin) {
-    // Don't redirect if we're already on login page or home page
-    const currentPath = window.location.pathname;
-    if (!currentPath.includes('/auth/login') && currentPath !== '/') {
-      console.log('Redirecting to login page');
-      window.location.href = "/auth/login";
-    } else {
-      console.log('Already on login or home page, not redirecting');
-    }
-  } else {
-    console.log('Logout complete, no redirect requested');
-  }
-}
-
-// Enhanced fetch function that includes credentials and auth token
-export async function fetchWithAuth(url: string, options: RequestInit = {}) {
-  // Ensure headers object exists
-  const headers: Record<string, string> = {
+// Fetch with auth token
+export async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Response> {
+  // Properly type the headers
+  const headers: Record<string, string> = { 
+    ...options.headers as Record<string, string>,
     'Content-Type': 'application/json',
-    ...(options.headers as Record<string, string> || {})
   };
   
-  // Include auth token if it exists and we're in a browser
-  if (isBrowser()) {
-    const token = getAuthToken();
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-      console.log(`fetchWithAuth to ${url} with token (length: ${token.length})`);
-    } else {
-      console.log(`fetchWithAuth to ${url} without token`);
-    }
+  // Add auth token if available
+  const token = getAuthToken();
+  if (token && token !== 'cookie-based-auth') {
+    headers['Authorization'] = `Bearer ${token}`;
   }
   
-  // Merge options with defaults
-  const fetchOptions = {
+  // Always include credentials for cookie-based auth
+  const fetchOptions: RequestInit = {
     ...options,
     headers,
-    credentials: 'include' as RequestCredentials, // Always include credentials
+    credentials: 'include' // Always include credentials for cookie-based auth
   };
   
-  try {
-    const response = await fetch(url, fetchOptions);
-    
-    // For auth checks, don't clear tokens on 401 to prevent loops
-    if (response.status === 401 && isBrowser()) {
-      if (url.includes('/api/auth/me')) {
-        console.log('Auth check returned 401 - normal for logged out users');
-      } else {
-        console.warn('Authentication error in fetch request to:', url);
-        // Clear tokens but don't redirect automatically
-        logout(false);
-      }
-    }
-    
-    return response;
-  } catch (error) {
-    console.error('Fetch error:', error);
-    throw error;
-  }
+  return fetch(url, fetchOptions);
 }

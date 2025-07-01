@@ -19,7 +19,15 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    await dbConnect();
+    try {
+      await dbConnect();
+    } catch (dbError) {
+      console.error('Database connection error:', dbError);
+      return NextResponse.json(
+        { message: 'Database connection failed' },
+        { status: 500 }
+      );
+    }
     
     // Find user by email
     const user = await User.findOne({ email: email.toLowerCase() });
@@ -47,9 +55,18 @@ export async function POST(req: NextRequest) {
       email: user.email,
       role: user.role
     };
-    console.log("Creating token with payload:", JSON.stringify(tokenPayload));
-    const token = signToken(tokenPayload);
-    console.log("Token generated, length:", token.length);
+    
+    let token;
+    try {
+      token = signToken(tokenPayload);
+      console.log("Token generated successfully");
+    } catch (tokenError) {
+      console.error("Token generation failed:", tokenError);
+      return NextResponse.json(
+        { message: 'Authentication system error' },
+        { status: 500 }
+      );
+    }
     
     // Create response with user data AND token
     const response = NextResponse.json({
@@ -66,16 +83,24 @@ export async function POST(req: NextRequest) {
     const host = req.headers.get('host') || '';
     const isProduction = process.env.NODE_ENV === 'production';
     
-    // In production, we may need to set the domain properly for cookies
+    // Determine domain for cookies
+    let domain;
+    if (isProduction) {
+      // Use COOKIE_DOMAIN env var or extract from host
+      domain = process.env.COOKIE_DOMAIN || (host.includes('.') ? host.split(':')[0] : undefined);
+    }
+    
+    // Set cookie options with improved security and cross-domain support
     const cookieOptions = {
       httpOnly: true,
       path: '/',
-      secure: true, // Always use secure in production for HTTPS
+      secure: isProduction,
       sameSite: 'lax' as const,
-      maxAge: 60 * 60 * 24 * 7 // 7 days for longer sessions
+      maxAge: 60 * 60 * 24 * 7, // 7 days for longer sessions
+      domain: domain
     };
     
-    // Add token cookie to response using Next.js cookies
+    // Add token cookie to response
     response.cookies.set({
       name: 'token',
       value: token,
@@ -90,39 +115,15 @@ export async function POST(req: NextRequest) {
       httpOnly: false
     });
     
-    // Additionally, include the token in the response JSON for immediate client access
+    // Include the token in headers
     response.headers.set('Authorization', `Bearer ${token}`);
     
-    // Log for debugging
-    console.log("Cookie settings:", {
-      secure: true,
-      sameSite: 'lax',
-      path: '/',
-      domain: req.headers.get('host')
-    });
-    
-    console.log("Login successful, cookies set");
-    
+    console.log("Login successful, cookies and headers set");
     return response;
-  } catch (error: any) {
-    console.error('Login error:', error?.message || 'Unknown error', error);
-    
-    // Check specifically for JWT_SECRET errors
-    if (error?.message === 'JWT_SECRET is not defined') {
-      return NextResponse.json(
-        { 
-          message: 'Server configuration error', 
-          error: process.env.NODE_ENV === 'development' ? 'JWT_SECRET is not defined' : 'Authentication error'
-        },
-        { status: 500 }
-      );
-    }
-    
+  } catch (error) {
+    console.error('Login error:', error);
     return NextResponse.json(
-      { 
-        message: 'Authentication failed', 
-        error: process.env.NODE_ENV === 'development' ? error?.message : 'Internal server error'
-      },
+      { message: 'Internal server error during login' },
       { status: 500 }
     );
   }
