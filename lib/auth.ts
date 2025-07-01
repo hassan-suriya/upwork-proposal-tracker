@@ -94,8 +94,34 @@ export function createCookieString(token: string): string {
 }
 
 export async function removeTokenCookie() {
-  const cookieStore = await cookies();
-  cookieStore.delete('token');
+  try {
+    const cookieStore = await cookies();
+    
+    // Get domain for production - strip any protocol from COOKIE_DOMAIN if it exists
+    let domain = undefined;
+    if (process.env.NODE_ENV === 'production' && process.env.COOKIE_DOMAIN) {
+      domain = process.env.COOKIE_DOMAIN.replace(/^https?:\/\//, '');
+      console.log('Logout: Using cookie domain:', domain);
+    }
+    
+    // Delete the main token cookie
+    cookieStore.delete({
+      name: 'token',
+      path: '/',
+      domain: domain,
+    });
+    
+    // Delete the auth status cookie
+    cookieStore.delete({
+      name: 'auth-status',
+      path: '/',
+      domain: domain,
+    });
+    
+    console.log('Cookies deleted successfully');
+  } catch (error) {
+    console.error('Error removing cookies:', error);
+  }
 }
 
 export function getTokenFromRequest(req: NextRequest): string | null {

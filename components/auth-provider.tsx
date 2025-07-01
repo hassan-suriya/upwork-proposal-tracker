@@ -2,22 +2,50 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { hasAuthToken, fetchWithAuth } from '@/lib/client-auth';
+import { hasAuthToken, fetchWithAuth, clearAuthToken } from '@/lib/client-auth';
 
 interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   user: any | null;
   checkAuth: () => Promise<void>;
+  logout: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<any | null>(null);
   const router = useRouter();
+
+  // Logout functionality
+  const logout = async () => {
+    console.log('AuthProvider: Logging out user');
+    try {
+      // Clear client-side auth state
+      clearAuthToken();
+      
+      // Update auth state
+      setIsAuthenticated(false);
+      setUser(null);
+      
+      // Call logout API
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include'
+      });
+      
+      // Redirect to login page
+      router.push('/auth/login');
+    } catch (error) {
+      console.error('AuthProvider: Logout error:', error);
+      // Even if API call fails, clear local state
+      setIsAuthenticated(false);
+      setUser(null);
+    }
+  };
 
   const checkAuth = async () => {
     setIsLoading(true);
@@ -64,7 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ isAuthenticated, isLoading, user, checkAuth }}
+      value={{ isAuthenticated, isLoading, user, checkAuth, logout }}
     >
       {children}
     </AuthContext.Provider>

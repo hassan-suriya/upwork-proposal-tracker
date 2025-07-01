@@ -38,8 +38,15 @@ export function middleware(request: NextRequest) {
   const hasToken = request.cookies.has('token');
   const hasAuthStatus = request.cookies.has('auth-status');
   
+  // Special case: if the logout page was accessed, ensure cookies are cleared
+  if (pathname === '/logout' || pathname === '/api/auth/logout') {
+    console.log('Middleware detected logout path, allowing access');
+    return NextResponse.next();
+  }
+  
   // Check if there is any authentication indicator
   if (!hasToken && !hasAuthStatus) {
+    console.log('Middleware: No auth tokens found, redirecting to login');
     // Redirect to login page with a return URL
     const url = new URL('/auth/login', request.url);
     url.searchParams.set('returnUrl', pathname);
