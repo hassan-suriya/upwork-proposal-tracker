@@ -83,10 +83,25 @@ export async function POST(req: NextRequest) {
     console.log("Login successful, cookies set");
     
     return response;
-  } catch (error) {
-    console.error('Login error:', error);
+  } catch (error: any) {
+    console.error('Login error:', error?.message || 'Unknown error', error);
+    
+    // Check specifically for JWT_SECRET errors
+    if (error?.message === 'JWT_SECRET is not defined') {
+      return NextResponse.json(
+        { 
+          message: 'Server configuration error', 
+          error: process.env.NODE_ENV === 'development' ? 'JWT_SECRET is not defined' : 'Authentication error'
+        },
+        { status: 500 }
+      );
+    }
+    
     return NextResponse.json(
-      { message: 'Internal server error' },
+      { 
+        message: 'Authentication failed', 
+        error: process.env.NODE_ENV === 'development' ? error?.message : 'Internal server error'
+      },
       { status: 500 }
     );
   }

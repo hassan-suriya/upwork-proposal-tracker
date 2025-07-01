@@ -2,7 +2,13 @@ import jwt from 'jsonwebtoken';
 import { cookies } from 'next/headers';
 import { NextRequest } from 'next/server';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+// Use environment variable for JWT_SECRET
+const JWT_SECRET = process.env.JWT_SECRET || '';
+
+// Check if JWT_SECRET is missing in production
+if (!JWT_SECRET && process.env.NODE_ENV === 'production') {
+  console.error('WARNING: JWT_SECRET is not set in production environment!');
+}
 
 export interface TokenPayload {
   userId: string;
@@ -11,13 +17,28 @@ export interface TokenPayload {
 }
 
 export function signToken(payload: TokenPayload): string {
+  if (!JWT_SECRET) {
+    throw new Error('JWT_SECRET is not defined');
+  }
   return jwt.sign(payload, JWT_SECRET, { expiresIn: '1d' });
 }
 
 export function verifyToken(token: string): TokenPayload | null {
   try {
+    if (!JWT_SECRET) {
+      console.error('JWT_SECRET is not defined');
+      return null;
+    }
+    
     console.log('Verifying token with secret length:', JWT_SECRET.length);
     const decoded = jwt.verify(token, JWT_SECRET) as TokenPayload;
+    
+    // Validate that the decoded token has the required fields
+    if (!decoded.userId || !decoded.email || !decoded.role) {
+      console.error('Token is missing required fields:', decoded);
+      return null;
+    }
+    
     console.log('Token verified successfully:', decoded.email);
     return decoded;
   } catch (error: any) {
@@ -85,13 +106,29 @@ export function getTokenFromRequest(req: NextRequest): string | null {
 
 export async function getCurrentUser(): Promise<TokenPayload | null> {
   try {
+    if (!JWT_SECRET) {
+      console.error('JWT_SECRET is not defined');
+      return null;
+    }
+    
     const cookieStore = await cookies();
     const token = cookieStore.get('token')?.value;
-    if (!token) return null;
     
-    return verifyToken(token);
-  } catch (error) {
-    console.error('Error getting current user:', error);
+    if (!token) {
+      console.log('No token found in cookies');
+      return null;
+    }
+    
+    const decoded = verifyToken(token);
+    
+    if (!decoded) {
+      console.log('Invalid token found in cookies');
+      return null;
+    }
+    
+    return decoded;
+  } catch (error: any) {
+    console.error('Error getting current user:', error?.message || 'Unknown error', error);
     return null;
   }
 }

@@ -1,22 +1,48 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Upwork Proposal Manager
+
+A Next.js application for tracking and managing Upwork proposals.
 
 ## Getting Started
 
-First, run the development server:
+First, clone the repository and install dependencies:
+
+```bash
+git clone https://github.com/your-username/upwork-proposal-tracker.git
+cd upwork-proposal-tracker
+npm install
+```
+
+Then, create a `.env.local` file with the following variables:
+
+```
+MONGODB_URI=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret
+```
+
+Run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment Variables
+
+The following environment variables are required for the application to work properly:
+
+- `MONGODB_URI`: MongoDB connection string
+- `JWT_SECRET`: Secret key for JWT authentication
+
+### Production Deployment
+
+When deploying to production (e.g., Vercel), make sure to set these environment variables in your hosting platform's dashboard.
+
+**Important for Vercel Deployment:**
+1. Go to your project settings in the Vercel dashboard
+2. Navigate to the "Environment Variables" section
+3. Add both `MONGODB_URI` and `JWT_SECRET` with their respective values
+4. Redeploy your application
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 

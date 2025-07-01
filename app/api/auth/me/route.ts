@@ -4,42 +4,43 @@ import User from '@/models/User';
 import dbConnect from '@/lib/dbConnect';
 
 export async function GET(req: NextRequest) {
-  // Development shortcut - always authenticate in dev mode
-  if (process.env.NODE_ENV === 'development') {
-    return NextResponse.json({ 
-      authenticated: true, 
-      user: {
-        email: "dev@example.com",
-        userId: "dev-user-id",
-        role: "freelancer" 
-      }
-    });
-  }
 
   return withAuth(req, async (userId, role) => {
     try {
+      console.log(`GET /api/auth/me - Fetching user data for userId: ${userId}`);
+      
       // Connect to database to get fresh user data
       await dbConnect();
+      
+      console.log(`GET /api/auth/me - Database connected, looking up user: ${userId}`);
       const user = await User.findById(userId).select('-hashedPassword');
       
       if (!user) {
-        console.log('GET /api/auth/me - User not found in database');
-        return NextResponse.json({ authenticated: false }, { status: 401 });
+        console.log(`GET /api/auth/me - User not found in database for userId: ${userId}`);
+        return NextResponse.json({ 
+          authenticated: false, 
+          error: 'User not found in database'
+        }, { status: 401 });
       }
       
-      console.log(`GET /api/auth/me - User authenticated: ${user.email}`);
+      console.log(`GET /api/auth/me - User authenticated: ${user.email}, role: ${user.role}`);
       return NextResponse.json({ 
         authenticated: true, 
         user: {
           id: user._id,
           email: user.email,
-          role: user.role 
+          role: user.role,
+          // Include any other non-sensitive user fields here
         }
       });
-    } catch (error) {
-      console.error('Error in /api/auth/me:', error);
+    } catch (error: any) {
+      console.error('Error in /api/auth/me:', error?.message || 'Unknown error', error);
       return NextResponse.json(
-        { message: 'Internal server error', authenticated: false },
+        { 
+          message: 'Internal server error', 
+          authenticated: false,
+          error: process.env.NODE_ENV === 'development' ? error?.message : 'Error retrieving user data'
+        },
         { status: 500 }
       );
     }

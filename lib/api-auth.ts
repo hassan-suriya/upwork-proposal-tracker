@@ -7,6 +7,16 @@ export async function withAuth(
   handler: (userId: string, role: string) => Promise<NextResponse>
 ) {
   try {
+    // Check for JWT_SECRET
+    if (!process.env.JWT_SECRET) {
+      console.error('JWT_SECRET environment variable is not set');
+      return NextResponse.json(
+        { message: 'Server configuration error', error: 'Missing JWT secret' },
+        { status: 500 }
+      );
+    }
+    
+    // Try to get token from cookie first
     const cookieStore = cookies();
     const token = cookieStore.get('token')?.value;
 
@@ -40,10 +50,13 @@ export async function withAuth(
 
     // Token is valid, execute handler with user information
     return await handler(decodedToken.userId, decodedToken.role);
-  } catch (error) {
-    console.error('Auth error:', error);
+  } catch (error: any) {
+    console.error('Auth error:', error?.message || 'Unknown error', error);
     return NextResponse.json(
-      { message: 'Internal server error' },
+      { 
+        message: 'Internal server error', 
+        error: process.env.NODE_ENV === 'development' ? error?.message : 'Authentication error'
+      },
       { status: 500 }
     );
   }
