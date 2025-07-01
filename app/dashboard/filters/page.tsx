@@ -24,7 +24,7 @@ import {
 export default function FiltersPage() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [status, setStatus] = useState("");
+  const [status, setStatus] = useState("any");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -43,7 +43,7 @@ export default function FiltersPage() {
       
       if (startDate) queryParams.append("startDate", startDate);
       if (endDate) queryParams.append("endDate", endDate);
-      if (status) queryParams.append("status", status);
+      if (status && status !== "any") queryParams.append("status", status);
       if (minPrice) queryParams.append("minPrice", minPrice);
       if (maxPrice) queryParams.append("maxPrice", maxPrice);
       if (searchQuery) queryParams.append("search", searchQuery);
@@ -70,7 +70,7 @@ export default function FiltersPage() {
   const handleClear = () => {
     setStartDate("");
     setEndDate("");
-    setStatus("");
+    setStatus("any");
     setMinPrice("");
     setMaxPrice("");
     setSearchQuery("");
@@ -120,7 +120,7 @@ export default function FiltersPage() {
                     <SelectValue placeholder="Any status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Any status</SelectItem>
+                    <SelectItem value="any">Any status</SelectItem>
                     <SelectItem value="applied">Applied</SelectItem>
                     <SelectItem value="viewed">Viewed</SelectItem>
                     <SelectItem value="interviewed">Interviewed</SelectItem>

@@ -53,14 +53,17 @@ export default function LoginPage() {
         
         console.log("Login successful, redirecting to dashboard...");
         
-        // Use window.location for a hard navigation instead of the Next.js router
-        window.location.href = "/dashboard";
-        
-        // Also try the router method as a fallback
-        // setTimeout(() => {
-        //   router.push("/dashboard");
-        //   router.refresh();
-        // }, 1000);
+        // First try regular navigation
+        try {
+          router.push("/dashboard");
+          router.refresh();
+        } catch (e) {
+          console.error("Router navigation failed, using fallback:", e);
+          // Use window.location as fallback
+          setTimeout(() => {
+            window.location.href = "/dashboard";
+          }, 500);
+        }
       } else {
         toast({
           variant: "destructive",

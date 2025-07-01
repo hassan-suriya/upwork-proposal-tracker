@@ -23,8 +23,11 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
   // Skip middleware in development for testing
-  if (process.env.NODE_ENV === 'development' && pathname.startsWith('/dashboard')) {
-    console.log(`Development mode: Skipping auth check for dashboard`);
+  if (process.env.NODE_ENV === 'development' && 
+      (pathname.startsWith('/dashboard') || 
+       pathname === '/api/auth/me' ||
+       pathname.startsWith('/api/proposals'))) {
+    console.log(`Development mode: Skipping auth check for ${pathname}`);
     return NextResponse.next();
   }
   

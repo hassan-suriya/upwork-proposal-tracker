@@ -16,8 +16,12 @@ export function signToken(payload: TokenPayload): string {
 
 export function verifyToken(token: string): TokenPayload | null {
   try {
-    return jwt.verify(token, JWT_SECRET) as TokenPayload;
-  } catch (error) {
+    console.log('Verifying token with secret length:', JWT_SECRET.length);
+    const decoded = jwt.verify(token, JWT_SECRET) as TokenPayload;
+    console.log('Token verified successfully:', decoded.email);
+    return decoded;
+  } catch (error: any) {
+    console.error('Token verification failed:', error?.message || 'Unknown error');
     return null;
   }
 }

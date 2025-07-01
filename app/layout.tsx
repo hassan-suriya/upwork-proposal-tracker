@@ -20,6 +20,9 @@ export const metadata: Metadata = {
   description: "Track and manage your Upwork proposals",
 };
 
+// Import AuthProvider
+import { AuthProvider } from "@/components/auth-provider";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -31,7 +34,9 @@ export default function RootLayout({
         className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}
       >
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-          {children}
+          <AuthProvider>
+            {children}
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

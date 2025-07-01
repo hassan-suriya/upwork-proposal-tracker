@@ -42,33 +42,12 @@ interface DashboardStats {
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
 
+import { useAuth } from "@/components/auth-provider";
+
 export default function Dashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
-  const [authChecked, setAuthChecked] = useState(false);
-
-  // Check auth status
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const response = await fetchWithAuth('/api/auth/me');
-        if (response && response.ok) {
-          const data = await response.json();
-          setUser(data.user);
-          console.log("User authenticated:", data.user);
-        } else {
-          console.log("User not authenticated");
-        }
-      } catch (error) {
-        console.error("Auth check error:", error);
-      } finally {
-        setAuthChecked(true);
-      }
-    };
-
-    checkAuth();
-  }, []);
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -77,7 +56,63 @@ export default function Dashboard() {
         if (!response || !response.ok) throw new Error("Failed to fetch dashboard data");
         
         const data = await response.json();
-        setStats(data);
+        console.log("Raw API response:", data);
+        
+        // Transform API data into the format expected by the dashboard UI
+        const statusColors = {
+          applied: "#0088FE",
+          viewed: "#00C49F",
+          interviewed: "#FFBB28",
+          hired: "#FF8042",
+          rejected: "#FF6347"
+        };
+        
+        // Create status breakdown for pie chart
+        const statusBreakdown = data.statusData 
+          ? Object.entries(data.statusData).map(([status, info]: [string, any]) => ({
+              name: status.charAt(0).toUpperCase() + status.slice(1),
+              value: info.count || 0,
+              color: statusColors[status as keyof typeof statusColors] || "#CCCCCC"
+            }))
+          : [
+              { name: "No Data", value: 1, color: "#CCCCCC" }
+            ];
+        
+        // Create daily proposals data (past 7 days)
+        const today = new Date();
+        const dailyProposals = Array(7).fill(0).map((_, index) => {
+          const date = new Date();
+          date.setDate(today.getDate() - (6 - index));
+          const dayName = new Intl.DateTimeFormat('en-US', { weekday: 'short' }).format(date);
+          return {
+            name: dayName,
+            value: 0 // We'll need actual daily data from the API
+          };
+        });
+        
+        // Create four week history data
+        const fourWeekHistory = Array(4).fill(0).map((_, index) => ({
+          name: `Week ${index + 1}`,
+          value: 0 // We'll need actual weekly data from the API
+        }));
+        
+        // Transform the data
+        const transformedStats: DashboardStats = {
+          weeklyTotal: data.counts?.weekly || 0,
+          weeklyTarget: 10, // This should be configurable
+          statusBreakdown: statusBreakdown,
+          successRates: {
+            viewRate: data.responseRates?.viewRate || 0,
+            interviewRate: data.responseRates?.interviewRate || 0,
+            hireRate: data.responseRates?.hireRate || 0
+          },
+          dailyProposals: dailyProposals,
+          fourWeekHistory: fourWeekHistory,
+          recentProposals: data.recentActivity || []
+        };
+        
+        setStats(transformedStats);
+        console.log("Transformed dashboard data:", transformedStats);
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
       } finally {
@@ -118,12 +153,12 @@ export default function Dashboard() {
           <CardHeader>
             <CardTitle>Weekly Progress</CardTitle>
             <CardDescription>
-              {stats.weeklyTotal} of {stats.weeklyTarget} proposals this week
+              {stats.weeklyTotal || 0} of {stats.weeklyTarget || 10} proposals this week
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Progress
-              value={(stats.weeklyTotal / stats.weeklyTarget) * 100}
+              value={(stats.weeklyTotal && stats.weeklyTarget) ? (stats.weeklyTotal / stats.weeklyTarget) * 100 : 0}
               className="h-2"
             />
             <div className="mt-6 h-[200px]">
@@ -161,12 +196,16 @@ export default function Dashboard() {
                     dataKey="value"
                     label
                   >
-                    {stats.statusBreakdown.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={entry.color || COLORS[index % COLORS.length]}
-                      />
-                    ))}
+                    {stats?.statusBreakdown && stats.statusBreakdown.length > 0 
+                      ? stats.statusBreakdown.map((entry, index) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={entry.color || COLORS[index % COLORS.length]}
+                          />
+                        )) 
+                      : COLORS.map((color, index) => (
+                          <Cell key={`cell-${index}`} fill={color} />
+                        ))}
                   </Pie>
                   <Tooltip />
                   <Legend />

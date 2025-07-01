@@ -18,7 +18,9 @@ export function getCookie(name: string): string | undefined {
 // Check if token exists
 export function hasAuthToken(): boolean {
   if (!isBrowser()) return false;
-  return !!getCookie('token');
+  
+  // Check for either the token or the auth-status cookie
+  return !!getCookie('token') || getCookie('auth-status') === 'logged-in';
 }
 
 // Get auth token

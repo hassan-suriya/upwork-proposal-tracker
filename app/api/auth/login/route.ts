@@ -38,12 +38,15 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    // Generate token
-    const token = signToken({
+    // Generate token with user info
+    const tokenPayload = {
       userId: user._id.toString(),
       email: user.email,
       role: user.role
-    });
+    };
+    console.log("Creating token with payload:", JSON.stringify(tokenPayload));
+    const token = signToken(tokenPayload);
+    console.log("Token generated, length:", token.length);
     
     // Create response with user data
     const response = NextResponse.json({
@@ -66,7 +69,18 @@ export async function POST(req: NextRequest) {
       maxAge: 60 * 60 * 24 // 1 day
     });
     
-    console.log("Login successful, cookie set");
+    // Also set a non-httpOnly cookie for client-side access
+    response.cookies.set({
+      name: 'auth-status',
+      value: 'logged-in',
+      httpOnly: false,
+      path: '/',
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 // 1 day
+    });
+    
+    console.log("Login successful, cookies set");
     
     return response;
   } catch (error) {
