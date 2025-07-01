@@ -21,7 +21,6 @@ const PUBLIC_API_PATHS = [
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
-  // Allow access to public pages
   if (PUBLIC_PATHS.some(path => pathname === path) || 
       PUBLIC_API_PATHS.some(path => pathname.startsWith(path))) {
     return NextResponse.next();
