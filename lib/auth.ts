@@ -52,10 +52,13 @@ export async function setTokenCookie(token: string) {
   try {
     const cookieStore = await cookies();
     
-    // Get domain for production
-    const domain = process.env.NODE_ENV === 'production' 
-      ? process.env.COOKIE_DOMAIN || undefined 
-      : undefined;
+    // Get domain for production - strip any protocol from COOKIE_DOMAIN if it exists
+    let domain = undefined;
+    if (process.env.NODE_ENV === 'production' && process.env.COOKIE_DOMAIN) {
+      domain = process.env.COOKIE_DOMAIN.replace(/^https?:\/\//, '');
+    }
+    
+    console.log('Setting cookie with domain:', domain);
     
     cookieStore.set({
       name: 'token',

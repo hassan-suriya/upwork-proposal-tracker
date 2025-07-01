@@ -29,22 +29,34 @@ export async function POST(req: NextRequest) {
     }
     
     try {
+      console.log('Registration: Connecting to database...');
       await dbConnect();
-    } catch (dbError) {
-      console.error('Database connection error during registration:', dbError);
+      console.log('Registration: Database connected successfully');
+    } catch (dbError: any) {
+      console.error('Database connection error during registration:', dbError.message);
       return NextResponse.json(
-        { message: 'Database connection failed' },
+        { message: 'Database connection failed. Please try again later.' },
         { status: 500 }
       );
     }
     
-    // Check if user already exists
-    const existingUser = await User.findOne({ email: email.toLowerCase() });
-    
-    if (existingUser) {
+    try {
+      // Check if user already exists
+      console.log('Registration: Checking if email already exists...');
+      const existingUser = await User.findOne({ email: email.toLowerCase() });
+      
+      if (existingUser) {
+        console.log('Registration: Email already in use');
+        return NextResponse.json(
+          { message: 'Email already in use' },
+          { status: 409 }
+        );
+      }
+    } catch (userCheckError: any) {
+      console.error('Error checking existing user:', userCheckError.message);
       return NextResponse.json(
-        { message: 'Email already in use' },
-        { status: 409 }
+        { message: 'Database error while checking user. Please try again later.' },
+        { status: 500 }
       );
     }
     
@@ -53,32 +65,55 @@ export async function POST(req: NextRequest) {
     const hashedPassword = await bcrypt.hash(password, salt);
     
     // Create new user
-    const newUser = new User({
-      email: email.toLowerCase(),
-      hashedPassword,
-      role: role || 'viewer' // Default to viewer if not specified
-    });
-    
+    let savedUser;
     try {
-      await newUser.save();
-    } catch (saveError) {
-      console.error('Error saving new user:', saveError);
+      console.log('Registration: Creating new user record...');
+      const newUser = new User({
+        email: email.toLowerCase().trim(),
+        hashedPassword,
+        role: role || 'viewer' // Default to viewer if not specified
+      });
+      
+      // Save with more detailed error handling
+      try {
+        savedUser = await newUser.save();
+        console.log('Registration: User saved successfully');
+      } catch (saveError: any) {
+        // Check for duplicate key error (code 11000)
+        if (saveError.code === 11000) {
+          console.error('Registration: Duplicate email error:', saveError.message);
+          return NextResponse.json(
+            { message: 'Email address is already registered' },
+            { status: 409 }
+          );
+        }
+        
+        console.error('Registration: Error saving user:', saveError.message);
+        return NextResponse.json(
+          { message: 'Failed to create user account. Database error.' },
+          { status: 500 }
+        );
+      }
+    } catch (userCreateError: any) {
+      console.error('Registration: User creation error:', userCreateError.message);
       return NextResponse.json(
-        { message: 'Failed to create user account' },
+        { message: 'Error creating user account' },
         { status: 500 }
       );
     }
     
     // Generate token for auto-login (optional feature)
-    const tokenPayload = {
-      userId: newUser._id.toString(),
-      email: newUser.email,
-      role: newUser.role
-    };
-    
     let token;
     try {
-      token = signToken(tokenPayload);
+      if (savedUser) {
+        const tokenPayload = {
+          userId: savedUser._id.toString(),
+          email: savedUser.email,
+          role: savedUser.role
+        };
+        token = signToken(tokenPayload);
+        console.log('Registration: Token generated for new user');
+      }
     } catch (tokenError) {
       console.error("Token generation failed during registration:", tokenError);
       // We continue without a token since this is registration
@@ -86,11 +121,11 @@ export async function POST(req: NextRequest) {
     
     const response = NextResponse.json({
       message: 'User registered successfully',
-      user: {
-        id: newUser._id,
-        email: newUser.email,
-        role: newUser.role
-      },
+      user: savedUser ? {
+        id: savedUser._id,
+        email: savedUser.email,
+        role: savedUser.role
+      } : undefined,
       // Include token if auto-login is desired
       token: token || undefined
     });

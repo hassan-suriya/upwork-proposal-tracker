@@ -87,7 +87,8 @@ export async function POST(req: NextRequest) {
     let domain;
     if (isProduction) {
       // Use COOKIE_DOMAIN env var or extract from host
-      domain = process.env.COOKIE_DOMAIN || (host.includes('.') ? host.split(':')[0] : undefined);
+      domain = process.env.COOKIE_DOMAIN || undefined;
+      console.log('Using cookie domain:', domain);
     }
     
     // Set cookie options with improved security and cross-domain support

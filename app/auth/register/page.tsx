@@ -33,26 +33,33 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
+      console.log("Submitting registration...");
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include", // Important for cookie handling
         body: JSON.stringify({ email, password, role }),
       });
 
+      const data = await response.json().catch(() => ({}));
+      
       if (response.ok) {
+        console.log("Registration successful:", data.message);
         toast({
           title: "Account created",
           description: "Your account has been created successfully.",
         });
         router.push("/auth/login");
       } else {
-        const error = await response.json();
+        console.error("Registration failed:", response.status, data.message || "Unknown error");
         toast({
           variant: "destructive",
           title: "Registration failed",
-          description: error.message || "Failed to create account",
+          description: data.message || 
+            (response.status === 500 ? "Server error. Please try again later." : 
+            "Failed to create account"),
         });
       }
     } catch (error) {

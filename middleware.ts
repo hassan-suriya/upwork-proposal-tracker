@@ -33,11 +33,13 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
   
-  // For protected pages, just check if the token cookie exists
+  // For protected pages, check if any auth indicator exists
   // Actual token verification happens in the API routes
   const hasToken = request.cookies.has('token');
+  const hasAuthStatus = request.cookies.has('auth-status');
   
-  if (!hasToken) {
+  // Check if there is any authentication indicator
+  if (!hasToken && !hasAuthStatus) {
     // Redirect to login page with a return URL
     const url = new URL('/auth/login', request.url);
     url.searchParams.set('returnUrl', pathname);

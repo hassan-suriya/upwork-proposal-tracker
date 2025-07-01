@@ -73,6 +73,7 @@ export function hasAuthToken(): boolean {
   
   // First check in-memory token
   if (inMemoryToken) {
+    console.log('Auth token found in memory');
     return true;
   }
   
@@ -80,6 +81,7 @@ export function hasAuthToken(): boolean {
   try {
     const localToken = localStorage.getItem('auth_token');
     if (localToken && localToken !== 'undefined' && localToken !== 'null') {
+      console.log('Auth token found in localStorage');
       // Restore token to memory
       inMemoryToken = localToken;
       return true;
@@ -87,6 +89,7 @@ export function hasAuthToken(): boolean {
     
     // Check for secondary auth flag
     if (localStorage.getItem('is_authenticated') === 'true') {
+      console.log('Auth flag found in localStorage');
       return true;
     }
   } catch (e) {
@@ -96,13 +99,18 @@ export function hasAuthToken(): boolean {
   // Then check cookies
   const cookieToken = getCookie('token');
   if (cookieToken && cookieToken !== 'undefined' && cookieToken !== 'null') {
+    console.log('Auth token found in cookies');
     // Restore token to memory
     inMemoryToken = cookieToken;
     return true;
   }
   
-  // If no actual token found, check secondary indicators
-  const hasStatusCookie = getCookie('auth-status') === 'logged-in';
+  // Check for status cookie
+  const authStatusCookie = getCookie('auth-status');
+  const hasStatusCookie = authStatusCookie === 'logged-in';
+  if (hasStatusCookie) {
+    console.log('Auth status cookie found:', authStatusCookie);
+  }
   
   // Also check localStorage timestamp as a backup
   let hasValidTimestamp = false;
@@ -113,13 +121,15 @@ export function hasAuthToken(): boolean {
       const now = Date.now();
       // Token is valid for 7 days
       hasValidTimestamp = now - tokenTime < 7 * 24 * 60 * 60 * 1000;
+      console.log('Auth timestamp check:', hasValidTimestamp ? 'valid' : 'expired');
     }
   } catch (e) {
     console.warn('Could not access localStorage', e);
   }
   
-  console.log('Auth status check - status cookie:', hasStatusCookie, 'valid timestamp:', hasValidTimestamp);
-  return hasStatusCookie || hasValidTimestamp;
+  const isAuthenticated = hasStatusCookie || hasValidTimestamp;
+  console.log('Auth status check - final result:', isAuthenticated);
+  return isAuthenticated;
 }
 
 // Get auth token

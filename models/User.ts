@@ -17,17 +17,36 @@ export interface IUser {
 
 const UserSchema = new Schema<IUser>(
   {
-    email: { type: String, required: true, unique: true },
+    email: { 
+      type: String, 
+      required: true, 
+      unique: true,
+      trim: true,
+      lowercase: true,
+      index: true
+    },
     name: { type: String },
     hashedPassword: { type: String, required: true },
-    role: { type: String, enum: ['freelancer', 'viewer'], default: 'freelancer' },
+    role: { 
+      type: String, 
+      enum: ['freelancer', 'viewer'], 
+      default: 'freelancer' 
+    },
     settings: {
       weeklyTarget: { type: Number, default: 10 },
       defaultView: { type: String, enum: ['list', 'grid', 'calendar'], default: 'list' },
       currency: { type: String, default: 'USD' }
     }
   },
-  { timestamps: true }
+  { 
+    timestamps: true,
+    // Add options to improve performance
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
+  }
 );
 
-export default mongoose.models.User || mongoose.model<IUser>('User', UserSchema);
+// Create the model only if it doesn't exist to prevent overwriting
+const UserModel = mongoose.models.User || mongoose.model<IUser>('User', UserSchema);
+
+export default UserModel;

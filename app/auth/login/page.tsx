@@ -63,6 +63,7 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
+      console.log("Attempting login...");
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: {
@@ -95,12 +96,26 @@ export default function LoginPage() {
           setAuthToken(token);
           console.log("Token stored successfully, length:", token.length);
           
+          // Also set a backup flag in localStorage
+          try {
+            localStorage.setItem('is_authenticated', 'true');
+            localStorage.setItem('user_email', email);
+          } catch (storageError) {
+            console.warn('Could not save auth data to localStorage:', storageError);
+          }
+          
           // Force a refresh to validate token is accessible
           const checkToken = getAuthToken();
           console.log("Token verification check:", checkToken ? "Token available" : "Token NOT available");
         } else {
-          console.warn("No token found in response. Login successful but token storage may fail.");
-          // Trust the cookie was set properly by the server
+          console.warn("No token found in response. Attempting to continue with cookie-based auth.");
+          // Set backup authentication indicators
+          try {
+            localStorage.setItem('is_authenticated', 'true');
+            localStorage.setItem('user_email', email);
+          } catch (storageError) {
+            console.warn('Could not save auth data to localStorage:', storageError);
+          }
         }
         
         toast({
