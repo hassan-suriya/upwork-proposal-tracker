@@ -27,8 +27,8 @@ import {
 } from "recharts";
 import { fetchWithAuth } from "@/lib/client-auth";
 
-// Color palette for charts
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
+// Color palette for charts - improved for better visibility
+const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#f97316', '#ef4444'];
 
 export default function ReportsPage() {
   const { toast } = useToast();
@@ -162,11 +162,11 @@ export default function ReportsPage() {
                       <YAxis />
                       <Tooltip />
                       <Legend />
-                      <Bar dataKey="applied" fill="#8884d8" name="Applied" />
-                      <Bar dataKey="viewed" fill="#82ca9d" name="Viewed" />
-                      <Bar dataKey="interviewed" fill="#ffc658" name="Interviewed" />
-                      <Bar dataKey="hired" fill="#ff8042" name="Hired" />
-                      <Bar dataKey="rejected" fill="#ff0000" name="Rejected" />
+                      <Bar dataKey="applied" fill="#3b82f6" name="Applied" />
+                      <Bar dataKey="viewed" fill="#10b981" name="Viewed" />
+                      <Bar dataKey="interviewed" fill="#f59e0b" name="Interviewed" />
+                      <Bar dataKey="hired" fill="#f97316" name="Hired" />
+                      <Bar dataKey="rejected" fill="#ef4444" name="Rejected" />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : reportType === 'statusDistribution' ? (
@@ -215,33 +215,33 @@ export default function ReportsPage() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                  <div className="p-4 bg-secondary rounded-lg text-center">
-                    <h3 className="text-lg font-semibold">Total</h3>
-                    <p className="text-3xl font-bold">
+                  <div className="p-4 bg-gray-100 dark:bg-gray-800 rounded-lg text-center border">
+                    <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Total</h3>
+                    <p className="text-3xl font-bold text-gray-900 dark:text-white">
                       {reportData.reduce((sum, month) => sum + (month.total || 0), 0)}
                     </p>
                   </div>
-                  <div className="p-4 bg-blue-100 rounded-lg text-center">
-                    <h3 className="text-lg font-semibold">Applied</h3>
-                    <p className="text-3xl font-bold">
+                  <div className="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg text-center border border-blue-200 dark:border-blue-800">
+                    <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-300">Applied</h3>
+                    <p className="text-3xl font-bold text-blue-700 dark:text-blue-200">
                       {reportData.reduce((sum, month) => sum + (month.applied || 0), 0)}
                     </p>
                   </div>
-                  <div className="p-4 bg-green-100 rounded-lg text-center">
-                    <h3 className="text-lg font-semibold">Viewed</h3>
-                    <p className="text-3xl font-bold">
+                  <div className="p-4 bg-green-50 dark:bg-green-900/30 rounded-lg text-center border border-green-200 dark:border-green-800">
+                    <h3 className="text-lg font-semibold text-green-800 dark:text-green-300">Viewed</h3>
+                    <p className="text-3xl font-bold text-green-700 dark:text-green-200">
                       {reportData.reduce((sum, month) => sum + (month.viewed || 0), 0)}
                     </p>
                   </div>
-                  <div className="p-4 bg-yellow-100 rounded-lg text-center">
-                    <h3 className="text-lg font-semibold">Interviewed</h3>
-                    <p className="text-3xl font-bold">
+                  <div className="p-4 bg-amber-50 dark:bg-amber-900/30 rounded-lg text-center border border-amber-200 dark:border-amber-800">
+                    <h3 className="text-lg font-semibold text-amber-800 dark:text-amber-300">Interviewed</h3>
+                    <p className="text-3xl font-bold text-amber-700 dark:text-amber-200">
                       {reportData.reduce((sum, month) => sum + (month.interviewed || 0), 0)}
                     </p>
                   </div>
-                  <div className="p-4 bg-orange-100 rounded-lg text-center">
-                    <h3 className="text-lg font-semibold">Hired</h3>
-                    <p className="text-3xl font-bold">
+                  <div className="p-4 bg-orange-50 dark:bg-orange-900/30 rounded-lg text-center border border-orange-200 dark:border-orange-800">
+                    <h3 className="text-lg font-semibold text-orange-800 dark:text-orange-300">Hired</h3>
+                    <p className="text-3xl font-bold text-orange-700 dark:text-orange-200">
                       {reportData.reduce((sum, month) => sum + (month.hired || 0), 0)}
                     </p>
                   </div>

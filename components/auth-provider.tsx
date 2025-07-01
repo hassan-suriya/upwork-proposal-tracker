@@ -20,28 +20,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   const checkAuth = async () => {
+    setIsLoading(true);
     try {
       if (!hasAuthToken()) {
         console.log('No auth token found in client');
         setIsAuthenticated(false);
         setUser(null);
+        setIsLoading(false); // Make sure we set loading to false
         return;
       }
 
-      setIsLoading(true);
+      console.log('Auth token found, checking with API...');
       const response = await fetchWithAuth('/api/auth/me');
       
       if (response && response.ok) {
         const data = await response.json();
         if (data.authenticated && data.user) {
+          console.log('User authenticated:', data.user);
           setIsAuthenticated(true);
           setUser(data.user);
-          console.log('User authenticated:', data.user);
         } else {
+          console.log('User not authenticated from API response');
           setIsAuthenticated(false);
           setUser(null);
         }
       } else {
+        console.log('Auth check failed, status:', response?.status);
         setIsAuthenticated(false);
         setUser(null);
       }

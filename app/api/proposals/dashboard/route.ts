@@ -184,9 +184,21 @@ export async function GET(req: NextRequest) {
       ? statusData.applied.totalValue / statusData.applied.count
       : 0;
     
-    // Get user's settings including weekly target
-    const userData = await User.findById(user.userId).select('settings');
-    console.log("User data from DB:", userData);
+    // Get user settings including weekly target
+    // If user is a viewer, get settings from the primary freelancer user
+    let userData;
+    
+    if (user.role === 'viewer') {
+      // Find the primary freelancer (assuming the first freelancer user is the primary one)
+      // You could modify this to use a more specific approach for determining the primary freelancer
+      const primaryFreelancer = await User.findOne({ role: 'freelancer' }).select('settings');
+      console.log("Primary freelancer data for viewer:", primaryFreelancer);
+      userData = primaryFreelancer;
+    } else {
+      // For freelancers, use their own settings
+      userData = await User.findById(user.userId).select('settings');
+      console.log("Freelancer data from DB:", userData);
+    }
     
     // Ensure we have valid settings object with weeklyTarget
     const userSettings = {

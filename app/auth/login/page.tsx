@@ -22,11 +22,40 @@ export default function LoginPage() {
   // Check if user is already logged in - client-side only
   useEffect(() => {
     // This will only run in the browser
-    if (hasAuthToken()) {
-      console.log("Already logged in, redirecting to dashboard");
-      setIsLoggedIn(true);
-      router.push('/dashboard');
-    }
+    const checkAuth = async () => {
+      if (hasAuthToken()) {
+        try {
+          // Make an actual auth check request
+          const response = await fetch("/api/auth/me", {
+            method: "GET",
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${getAuthToken()}`
+            }
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            if (data.authenticated) {
+              console.log("Auth check confirmed user is logged in, redirecting to dashboard");
+              setIsLoggedIn(true);
+              router.push('/dashboard');
+              return;
+            }
+          }
+          
+          // If we get here, the token is invalid or expired
+          console.log("Auth token exists but is invalid");
+        } catch (error) {
+          console.error("Error checking authentication status:", error);
+        }
+      } else {
+        console.log("No auth token found, staying on login page");
+      }
+    };
+    
+    checkAuth();
   }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -115,7 +144,7 @@ export default function LoginPage() {
     <div className="w-full max-w-md p-8 space-y-8 bg-card rounded-lg shadow-lg">
       <div className="text-center">
         <h1 className="text-2xl font-bold tracking-tight">
-          Upwork Proposal Tracker
+          Yoodule Upwork Proposal Tracker
         </h1>
         <p className="text-sm text-muted-foreground mt-2">
           Sign in to your account

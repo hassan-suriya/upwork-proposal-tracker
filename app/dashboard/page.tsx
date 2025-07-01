@@ -149,9 +149,20 @@ export default function Dashboard() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4">
         <h1 className="text-3xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground">
-          Track your proposal statistics and performance.
-        </p>
+        {user?.role === 'viewer' ? (
+          <div className="bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300 p-3 rounded-md mb-2">
+            <p className="font-semibold">
+              Viewer Mode: You are viewing the freelancer's proposal data.
+            </p>
+            <p className="text-sm">
+              As a viewer, you can monitor all statistics but cannot add or modify proposals.
+            </p>
+          </div>
+        ) : (
+          <p className="text-muted-foreground">
+            Track your proposal statistics and performance.
+          </p>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

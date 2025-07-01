@@ -15,10 +15,12 @@ import { useToast } from "@/components/ui/use-toast";
 import { IProposal } from "@/models/Proposal";
 import ProposalForm from "@/components/proposal-form";
 import ProposalList from "@/components/proposal-list";
-import { Plus, Search, RefreshCw } from "lucide-react";
+import { Plus, Search, RefreshCw, Eye } from "lucide-react";
 import { fetchWithAuth } from "@/lib/client-auth";
+import { useAuth } from "@/components/auth-provider";
 
 export default function ProposalsPage() {
+  const { user } = useAuth();
   const [proposals, setProposals] = useState<IProposal[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -155,20 +157,35 @@ export default function ProposalsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Proposals</h1>
-          <p className="text-muted-foreground">
-            Manage your Upwork proposals
-          </p>
+          {user?.role === 'viewer' ? (
+            <div className="bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300 p-3 rounded-md mb-2 mt-2">
+              <p className="font-semibold flex items-center">
+                <Eye className="mr-2 h-4 w-4" /> Viewer Mode
+              </p>
+              <p className="text-sm">
+                You are viewing the freelancer's proposal data in read-only mode.
+              </p>
+            </div>
+          ) : (
+            <p className="text-muted-foreground">
+              Manage your Upwork proposals
+            </p>
+          )}
         </div>
-        <Button onClick={() => setShowForm(true)}>
-          <Plus className="mr-2 h-4 w-4" /> Add Proposal
-        </Button>
+        {user?.role !== 'viewer' && (
+          <Button onClick={() => setShowForm(true)}>
+            <Plus className="mr-2 h-4 w-4" /> Add Proposal
+          </Button>
+        )}
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle>Proposals List</CardTitle>
           <CardDescription>
-            View and manage all your submitted proposals
+            {user?.role === 'viewer' ? 
+              "View all proposals submitted by the freelancer" : 
+              "View and manage all your submitted proposals"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -198,6 +215,7 @@ export default function ProposalsPage() {
             loading={loading}
             onPageChange={handlePageChange}
             onEdit={handleEditProposal}
+            isViewer={user?.role === 'viewer'}
             onDelete={handleDeleteProposal}
           />
         </CardContent>

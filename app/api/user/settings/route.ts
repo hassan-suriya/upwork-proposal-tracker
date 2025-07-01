@@ -30,6 +30,25 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    // For viewer role, get weekly target from primary freelancer
+    let settings = userDoc.settings || {
+      weeklyTarget: 10,
+      defaultView: 'list',
+      currency: 'USD'
+    };
+
+    if (userDoc.role === 'viewer') {
+      // Find primary freelancer to get their weekly target
+      const primaryFreelancer = await User.findOne({ role: 'freelancer' }).select('settings');
+      if (primaryFreelancer && primaryFreelancer.settings) {
+        // Use the freelancer's weekly target, but viewer's own settings for other preferences
+        settings = {
+          ...settings,
+          weeklyTarget: primaryFreelancer.settings.weeklyTarget || 10
+        };
+      }
+    }
+
     // Return user data including settings
     return NextResponse.json({
       user: {
@@ -37,11 +56,7 @@ export async function GET(req: NextRequest) {
         email: userDoc.email,
         name: userDoc.name || '',
         role: userDoc.role,
-        settings: userDoc.settings || {
-          weeklyTarget: 10,
-          defaultView: 'list',
-          currency: 'USD'
-        }
+        settings: settings
       }
     });
   } catch (error) {

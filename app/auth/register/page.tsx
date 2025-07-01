@@ -73,7 +73,7 @@ export default function RegisterPage() {
           Create an Account
         </h1>
         <p className="text-sm text-muted-foreground mt-2">
-          Register to use Upwork Proposal Tracker
+          Register to use Yoodule Upwork Proposal Tracker
         </p>
       </div>
       <form className="space-y-6" onSubmit={handleSubmit}>

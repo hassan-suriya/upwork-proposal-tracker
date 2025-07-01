@@ -8,20 +8,38 @@ import { useAuth } from "@/components/auth-provider";
 
 export default function Home() {
   const router = useRouter();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
   
   useEffect(() => {
-    // Redirect to dashboard if user is already logged in
-    if (isAuthenticated && !isLoading) {
-      router.push('/dashboard');
+    // Only redirect if explicitly authenticated and auth check is complete
+    if (!isLoading) {
+      if (isAuthenticated && user) {
+        console.log("User authenticated, redirecting to dashboard");
+        router.push('/dashboard');
+      } else {
+        // Auth check is complete and user is not authenticated
+        console.log("User not authenticated, staying on home page");
+      }
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [isAuthenticated, isLoading, user, router]);
 
   // If still checking authentication, show loading state
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <p className="text-lg">Loading...</p>
+        <p className="text-lg">Loading authentication status...</p>
+      </div>
+    );
+  }
+  
+  // If authenticated but somehow still on this page
+  if (isAuthenticated && user) {
+    return (
+      <div className="flex items-center justify-center h-screen flex-col gap-4">
+        <p className="text-lg">You are logged in. Redirecting to dashboard...</p>
+        <Button onClick={() => router.push('/dashboard')}>
+          Go to Dashboard
+        </Button>
       </div>
     );
   }
@@ -38,7 +56,7 @@ export default function Home() {
             height={46}
             priority
           />
-          <h1 className="text-4xl font-bold">Upwork Proposal Tracker</h1>
+          <h1 className="text-4xl font-bold">Yoodule Upwork Proposal Tracker</h1>
           <p className="text-xl text-muted-foreground">
             Track, manage and analyze your Upwork proposals to maximize your success rate
           </p>
@@ -80,7 +98,7 @@ export default function Home() {
       </main>
       
       <footer className="row-start-3 text-center text-sm text-muted-foreground">
-        <p>&copy; {new Date().getFullYear()} Upwork Proposal Tracker. All rights reserved.</p>
+        <p>&copy; {new Date().getFullYear()} Yoodule Upwork Proposal Tracker. All rights reserved.</p>
       </footer>
     </div>
   );

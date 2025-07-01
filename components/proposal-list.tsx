@@ -35,6 +35,7 @@ interface ProposalListProps {
   onPageChange: (page: number) => void;
   onEdit: (id: string, data: Partial<IProposal>) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
+  isViewer?: boolean;
 }
 
 export default function ProposalList({
@@ -44,6 +45,7 @@ export default function ProposalList({
   onPageChange,
   onEdit,
   onDelete,
+  isViewer = false
 }: ProposalListProps) {
   const [editingProposal, setEditingProposal] = useState<IProposal | null>(
     null
@@ -104,9 +106,15 @@ export default function ProposalList({
       ) : proposals.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-10 space-y-2">
           <p className="text-lg">No proposals found</p>
-          <p className="text-sm text-muted-foreground">
-            Add your first proposal to get started
-          </p>
+          {isViewer ? (
+            <p className="text-sm text-muted-foreground">
+              No proposals have been submitted by the freelancer yet
+            </p>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Add your first proposal to get started
+            </p>
+          )}
         </div>
       ) : (
         <>
@@ -119,7 +127,9 @@ export default function ProposalList({
                   <th className="px-4 py-3 text-left font-medium">Status</th>
                   <th className="px-4 py-3 text-left font-medium">Price ($)</th>
                   <th className="px-4 py-3 text-left font-medium">Notes</th>
-                  <th className="px-4 py-3 text-right font-medium">Actions</th>
+                  {!isViewer && (
+                    <th className="px-4 py-3 text-right font-medium">Actions</th>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -154,33 +164,35 @@ export default function ProposalList({
                     <td className="px-4 py-3 max-w-[200px] truncate">
                       {proposal.notes}
                     </td>
-                    <td className="px-4 py-3 text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Open menu</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => handleEdit(proposal)}
-                          >
-                            <Edit className="mr-2 h-4 w-4" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() =>
-                              handleDelete(proposal._id.toString())
-                            }
-                            className="text-destructive focus:text-destructive"
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </td>
+                    {!isViewer && (
+                      <td className="px-4 py-3 text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">Open menu</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => handleEdit(proposal)}
+                            >
+                              <Edit className="mr-2 h-4 w-4" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() =>
+                                handleDelete(proposal._id.toString())
+                              }
+                              className="text-destructive focus:text-destructive"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

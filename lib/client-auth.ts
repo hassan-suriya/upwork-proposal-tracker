@@ -39,9 +39,34 @@ export function hasAuthToken(): boolean {
   if (!isBrowser()) return false;
   
   // First check in-memory token
-  if (inMemoryToken) return true;
+  if (inMemoryToken) {
+    console.log('Auth token found in memory');
+    return true;
+  }
+  
+  // Then check if there's an actual token in localStorage
+  try {
+    const localToken = localStorage.getItem('auth_token');
+    if (localToken) {
+      console.log('Auth token found in localStorage');
+      // Restore token to memory
+      inMemoryToken = localToken;
+      return true;
+    }
+  } catch (e) {
+    console.warn('Could not access localStorage', e);
+  }
   
   // Then check cookies
+  const cookieToken = getCookie('token');
+  if (cookieToken) {
+    console.log('Auth token found in cookie');
+    // Restore token to memory
+    inMemoryToken = cookieToken;
+    return true;
+  }
+  
+  // If no actual token found, check secondary indicators
   const hasStatusCookie = getCookie('auth-status') === 'logged-in';
   
   // Also check localStorage timestamp as a backup
@@ -58,6 +83,7 @@ export function hasAuthToken(): boolean {
     console.warn('Could not access localStorage', e);
   }
   
+  console.log('No auth token found, status cookie:', hasStatusCookie, 'valid timestamp:', hasValidTimestamp);
   return hasStatusCookie || hasValidTimestamp;
 }
 
@@ -95,11 +121,45 @@ export function getAuthToken(): string | undefined {
 }
 
 // Logout function
-export function logout() {
+export function logout(redirectToLogin = true) {
   if (!isBrowser()) return;
   
-  document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-  window.location.href = "/auth/login";
+  console.log('Logging out user, clearing all auth tokens');
+  
+  // Clear in-memory token
+  inMemoryToken = null;
+  
+  // Clear localStorage
+  try {
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('auth_token_timestamp');
+    console.log('Cleared localStorage auth tokens');
+  } catch (e) {
+    console.warn('Could not access localStorage during logout', e);
+  }
+  
+  // Clear cookies - use secure way to clear cookies
+  const cookiesToClear = ['token', 'auth-status'];
+  cookiesToClear.forEach(cookieName => {
+    document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; Secure; SameSite=Strict;`;
+    document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+  });
+  
+  console.log('Cleared auth cookies');
+  
+  // Only redirect if requested (to prevent infinite loops)
+  if (redirectToLogin) {
+    // Don't redirect if we're already on login page or home page
+    const currentPath = window.location.pathname;
+    if (!currentPath.includes('/auth/login') && currentPath !== '/') {
+      console.log('Redirecting to login page');
+      window.location.href = "/auth/login";
+    } else {
+      console.log('Already on login or home page, not redirecting');
+    }
+  } else {
+    console.log('Logout complete, no redirect requested');
+  }
 }
 
 // Enhanced fetch function that includes credentials and auth token
@@ -115,6 +175,9 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}) {
     const token = getAuthToken();
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
+      console.log(`fetchWithAuth to ${url} with token (length: ${token.length})`);
+    } else {
+      console.log(`fetchWithAuth to ${url} without token`);
     }
   }
   
@@ -128,12 +191,15 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}) {
   try {
     const response = await fetch(url, fetchOptions);
     
-    // Only handle 401 errors with redirect in the browser
+    // For auth checks, don't clear tokens on 401 to prevent loops
     if (response.status === 401 && isBrowser()) {
-      console.error('Authentication error, redirecting to login');
-      // Handle token expiration or auth issues
-      logout();
-      return null;
+      if (url.includes('/api/auth/me')) {
+        console.log('Auth check returned 401 - normal for logged out users');
+      } else {
+        console.warn('Authentication error in fetch request to:', url);
+        // Clear tokens but don't redirect automatically
+        logout(false);
+      }
     }
     
     return response;

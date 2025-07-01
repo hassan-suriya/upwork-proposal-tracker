@@ -187,17 +187,22 @@ export default function SettingsPage() {
     setIsDisplaySaving(true);
     
     try {
-      // Validate weekly target is a positive number
-      const weeklyTargetNum = parseInt(weeklyTarget);
-      if (isNaN(weeklyTargetNum) || weeklyTargetNum < 1) {
-        throw new Error('Weekly target must be a positive number');
-      }
-      
-      const settings: UserSettings = {
-        weeklyTarget: weeklyTargetNum,
+      // For viewer role, we don't need to validate or send the weekly target
+      // as the backend will ignore it anyway
+      let settings: UserSettings = {
         defaultView,
         currency
       };
+      
+      // Only add weeklyTarget if user is a freelancer
+      if (user?.role !== 'viewer') {
+        // Validate weekly target is a positive number
+        const weeklyTargetNum = parseInt(weeklyTarget);
+        if (isNaN(weeklyTargetNum) || weeklyTargetNum < 1) {
+          throw new Error('Weekly target must be a positive number');
+        }
+        settings.weeklyTarget = weeklyTargetNum;
+      }
       
       const response = await fetchWithAuth('/api/user/settings', {
         method: 'PUT',
@@ -345,7 +350,7 @@ export default function SettingsPage() {
               <CardHeader>
                 <CardTitle>Display Preferences</CardTitle>
                 <CardDescription>
-                  Customize your Upwork Proposal Tracker experience
+                  Customize your Yoodule Upwork Proposal Tracker experience
                 </CardDescription>
               </CardHeader>
               <CardContent>
