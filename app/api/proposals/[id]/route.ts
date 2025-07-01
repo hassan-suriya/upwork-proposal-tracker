@@ -3,6 +3,9 @@ import dbConnect from '@/lib/dbConnect';
 import Proposal from '@/models/Proposal';
 import { getCurrentUser } from '@/lib/auth';
 
+// Configure the runtime to use Node.js instead of Edge
+export const runtime = 'nodejs';
+
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }

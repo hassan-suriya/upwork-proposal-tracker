@@ -42,7 +42,13 @@ When deploying to production (e.g., Vercel), make sure to set these environment 
 1. Go to your project settings in the Vercel dashboard
 2. Navigate to the "Environment Variables" section
 3. Add both `MONGODB_URI` and `JWT_SECRET` with their respective values
-4. Redeploy your application
+4. Ensure all API routes use the Node.js runtime (not Edge runtime) by including the following line in each route file:
+   ```typescript
+   export const runtime = 'nodejs';
+   ```
+5. Redeploy your application
+
+**Note:** The application uses the `jsonwebtoken` library which requires the Node.js `crypto` module. Since the Edge Runtime in Vercel doesn't support this module, all API routes that use authentication must explicitly specify the Node.js runtime.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 

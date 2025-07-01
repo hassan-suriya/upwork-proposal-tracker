@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { verifyToken, getTokenFromRequest } from './lib/auth';
 
 // Paths that don't require authentication
 const PUBLIC_PATHS = [
@@ -22,54 +21,29 @@ const PUBLIC_API_PATHS = [
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
-  // No more development shortcuts
-  
-  console.log(`Middleware processing: ${pathname}`);
-  
   // Allow access to public pages
   if (PUBLIC_PATHS.some(path => pathname === path) || 
       PUBLIC_API_PATHS.some(path => pathname.startsWith(path))) {
-    console.log(`Public path allowed: ${pathname}`);
     return NextResponse.next();
   }
   
-  // Check for API routes
+  // Skip middleware for API routes - we'll handle auth in the API routes themselves
+  // This avoids the Edge runtime limitation with JWT verification
   if (pathname.startsWith('/api')) {
-    const token = getTokenFromRequest(request);
-    
-    if (!token || !verifyToken(token)) {
-      console.log(`API unauthorized: ${pathname}`);
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-    
-    console.log(`API authorized: ${pathname}`);
     return NextResponse.next();
   }
   
-  // Check for protected pages
-  const token = request.cookies.get('token')?.value;
+  // For protected pages, just check if the token cookie exists
+  // Actual token verification happens in the API routes
+  const hasToken = request.cookies.has('token');
   
-  if (!token) {
-    console.log(`No token found for path: ${pathname}`);
+  if (!hasToken) {
     // Redirect to login page with a return URL
     const url = new URL('/auth/login', request.url);
     url.searchParams.set('returnUrl', pathname);
     return NextResponse.redirect(url);
   }
   
-  const user = verifyToken(token);
-  if (!user) {
-    console.log(`Invalid token for path: ${pathname}`);
-    // Redirect to login page with a return URL
-    const url = new URL('/auth/login', request.url);
-    url.searchParams.set('returnUrl', pathname);
-    return NextResponse.redirect(url);
-  }
-  
-  console.log(`User authenticated for path: ${pathname}, userId: ${user.userId}`);
   return NextResponse.next();
 }
 

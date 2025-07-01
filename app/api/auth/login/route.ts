@@ -4,6 +4,9 @@ import dbConnect from '@/lib/dbConnect';
 import User from '@/models/User';
 import { signToken, setTokenCookie, createCookieString } from '@/lib/auth';
 
+// Configure the runtime to use Node.js instead of Edge
+export const runtime = 'nodejs';
+
 export async function POST(req: NextRequest) {
   try {
     const { email, password } = await req.json();

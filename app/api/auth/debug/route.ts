@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth } from '@/lib/api-auth';
 
+// Configure the runtime to use Node.js instead of Edge
+export const runtime = 'nodejs';
+
 // This route provides debugging information for authentication issues
 // IMPORTANT: Only enable this in a protected environment for debugging purposes
 // Disable or remove this file before final deployment

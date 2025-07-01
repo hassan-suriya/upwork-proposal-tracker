@@ -3,6 +3,9 @@ import { withAuth } from '@/lib/api-auth';
 import User from '@/models/User';
 import dbConnect from '@/lib/dbConnect';
 
+// Configure the runtime to use Node.js instead of Edge
+export const runtime = 'nodejs';
+
 export async function GET(req: NextRequest) {
 
   return withAuth(req, async (userId, role) => {

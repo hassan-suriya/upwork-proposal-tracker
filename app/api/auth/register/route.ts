@@ -3,6 +3,9 @@ import bcrypt from 'bcryptjs';
 import dbConnect from '@/lib/dbConnect';
 import User from '@/models/User';
 
+// Configure the runtime to use Node.js instead of Edge
+export const runtime = 'nodejs';
+
 export async function POST(req: NextRequest) {
   try {
     const { email, password, role } = await req.json();
