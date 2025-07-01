@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/dbConnect';
 import Proposal from '@/models/Proposal';
+import User from '@/models/User';
 import { getCurrentUser } from '@/lib/auth';
 
 // Configure the runtime to use Node.js instead of Edge
@@ -130,9 +131,7 @@ export async function GET(req: NextRequest) {
           }
         }}
       ])
-    ]);
-    
-    // Calculate response rates
+    ]);        // Calculate response rates
     const rates = responseRates.length > 0 ? responseRates[0] : { total: 0, viewed: 0, interviewed: 0, hired: 0 };
     const responseRateData = {
       viewRate: rates.total > 0 ? (rates.viewed / rates.total) * 100 : 0,
@@ -149,6 +148,31 @@ export async function GET(req: NextRequest) {
       return acc;
     }, {});
     
+    // Generate daily proposal data for past 7 days
+    const dailyProposalData = await Promise.all(
+      Array(7).fill(0).map(async (_, index) => {
+        const date = new Date();
+        date.setDate(now.getDate() - (6 - index));
+        
+        // Set to start of day
+        const dayStart = new Date(date);
+        dayStart.setHours(0, 0, 0, 0);
+        
+        // Set to end of day
+        const dayEnd = new Date(date);
+        dayEnd.setHours(23, 59, 59, 999);
+        
+        // Count proposals for this day
+        const count = await Proposal.countDocuments({
+          ...baseQuery,
+          date: { $gte: dayStart, $lte: dayEnd }
+        });
+        
+        const dayName = new Intl.DateTimeFormat('en-US', { weekday: 'short' }).format(date);
+        return { name: dayName, value: count };
+      })
+    );
+    
     // Format month data (fill in missing months with 0)
     const monthData = Array(12).fill(0);
     byMonth.forEach((item: any) => {
@@ -160,6 +184,19 @@ export async function GET(req: NextRequest) {
       ? statusData.applied.totalValue / statusData.applied.count
       : 0;
     
+    // Get user's settings including weekly target
+    const userData = await User.findById(user.userId).select('settings');
+    console.log("User data from DB:", userData);
+    
+    // Ensure we have valid settings object with weeklyTarget
+    const userSettings = {
+      weeklyTarget: userData?.settings?.weeklyTarget || 25,
+      defaultView: userData?.settings?.defaultView || 'list',
+      currency: userData?.settings?.currency || 'USD'
+    };
+    
+    console.log("User settings being sent to frontend:", userSettings);
+    
     return NextResponse.json({
       counts: {
         total: totalCount,
@@ -169,9 +206,11 @@ export async function GET(req: NextRequest) {
       },
       statusData,
       monthData,
+      dailyData: dailyProposalData, // Include daily proposal data
       recentActivity,
       responseRates: responseRateData,
-      avgProposalValue
+      avgProposalValue,
+      userSettings // Include user settings in the response
     });
     
   } catch (error) {

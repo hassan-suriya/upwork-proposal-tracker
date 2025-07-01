@@ -32,9 +32,9 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 The following environment variables are required for the application to work properly:
 
 - `MONGODB_URI`: MongoDB connection string
-- `JWT_SECRET`: Secret key for JWT authentication
+- `JWT_SECRET`: Secret key for JWT authentication (make this a strong, random string)
 
-### Production Deployment
+## Production Deployment
 
 When deploying to production (e.g., Vercel), make sure to set these environment variables in your hosting platform's dashboard.
 
@@ -47,6 +47,22 @@ When deploying to production (e.g., Vercel), make sure to set these environment 
    export const runtime = 'nodejs';
    ```
 5. Redeploy your application
+
+## Authentication Troubleshooting
+
+If you experience authentication issues in production:
+
+1. **Test Authentication:** Visit `/auth/test` route to verify token storage is working properly
+2. **Check Browser Console:** Look for any errors related to token or cookie access
+3. **Verify Environment Variables:** Make sure `JWT_SECRET` is properly set in production
+4. **Clear Browser Data:** Try clearing cookies and local storage in your browser
+5. **Cookie Issues:** If using a custom domain, ensure cookies are set with the proper domain
+
+### Common Issues and Solutions
+
+- **"No auth token found in client"**: This usually happens when the client can't store or retrieve the token properly. Make sure you're not in an incognito/private window and that cookies/localStorage are enabled.
+- **Authentication works locally but not in production**: Vercel production environment has stricter security settings. Make sure cookies are set with `secure: true` and proper domain settings.
+- **Token not persisting after refresh**: The application uses multiple token storage methods (in-memory, localStorage, and cookies). If one fails, it will try the others. Check browser console for storage-related errors.
 
 **Note:** The application uses the `jsonwebtoken` library which requires the Node.js `crypto` module. Since the Edge Runtime in Vercel doesn't support this module, all API routes that use authentication must explicitly specify the Node.js runtime.
 

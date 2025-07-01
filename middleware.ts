@@ -8,6 +8,7 @@ const PUBLIC_PATHS = [
   '/auth/register',
   '/auth/forgot-password',
   '/auth/reset-password',
+  '/auth/test', // Allow access to the auth test page
 ];
 
 // API routes that don't require authentication

@@ -6,9 +6,9 @@ const nextConfig = {
   images: {
     domains: ['avatars.githubusercontent.com', 'lh3.googleusercontent.com'],
   },
-  // This is critical for proper cookie handling with auth system
+  // Server Actions are now available by default
   experimental: {
-    serverActions: true,
+    // No experimental features needed at the moment
   },
 };
 

@@ -78,15 +78,14 @@ export default function Dashboard() {
               { name: "No Data", value: 1, color: "#CCCCCC" }
             ];
         
-        // Create daily proposals data (past 7 days)
-        const today = new Date();
-        const dailyProposals = Array(7).fill(0).map((_, index) => {
+        // Get daily proposals data from API response or create empty placeholder
+        const dailyProposals = data.dailyData || Array(7).fill(0).map((_, index) => {
           const date = new Date();
-          date.setDate(today.getDate() - (6 - index));
+          date.setDate(new Date().getDate() - (6 - index));
           const dayName = new Intl.DateTimeFormat('en-US', { weekday: 'short' }).format(date);
           return {
             name: dayName,
-            value: 0 // We'll need actual daily data from the API
+            value: 0
           };
         });
         
@@ -96,10 +95,17 @@ export default function Dashboard() {
           value: 0 // We'll need actual weekly data from the API
         }));
         
+        // Log the received data for debugging
+        console.log("User settings from API:", data.userSettings);
+        
+        // Get weekly target from user settings
+        const weeklyTarget = data.userSettings?.weeklyTarget || 25;
+        console.log("Using weekly target:", weeklyTarget);
+        
         // Transform the data
         const transformedStats: DashboardStats = {
           weeklyTotal: data.counts?.weekly || 0,
-          weeklyTarget: 10, // This should be configurable
+          weeklyTarget: weeklyTarget,
           statusBreakdown: statusBreakdown,
           successRates: {
             viewRate: data.responseRates?.viewRate || 0,
@@ -153,7 +159,7 @@ export default function Dashboard() {
           <CardHeader>
             <CardTitle>Weekly Progress</CardTitle>
             <CardDescription>
-              {stats.weeklyTotal || 0} of {stats.weeklyTarget || 10} proposals this week
+              {stats.weeklyTotal || 0} of {stats.weeklyTarget} proposals this week
             </CardDescription>
           </CardHeader>
           <CardContent>

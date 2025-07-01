@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
-import { hasAuthToken } from "@/lib/client-auth";
+import { hasAuthToken, setAuthToken, getAuthToken } from "@/lib/client-auth";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -46,6 +46,34 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (response.ok && data.success) {
+        // Get token from multiple possible sources (in order of preference)
+        let token = null;
+        
+        // 1. Try Authorization header
+        const authHeader = response.headers.get('Authorization');
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+          token = authHeader.substring(7);
+          console.log("Token found in Authorization header");
+        } 
+        // 2. Try response body
+        else if (data.token) {
+          token = data.token;
+          console.log("Token found in response body");
+        }
+        
+        if (token) {
+          // Store token in memory and localStorage
+          setAuthToken(token);
+          console.log("Token stored successfully, length:", token.length);
+          
+          // Force a refresh to validate token is accessible
+          const checkToken = getAuthToken();
+          console.log("Token verification check:", checkToken ? "Token available" : "Token NOT available");
+        } else {
+          console.warn("No token found in response. Login successful but token storage may fail.");
+          // Trust the cookie was set properly by the server
+        }
+        
         toast({
           title: "Success",
           description: "Login successful! Redirecting...",
@@ -53,17 +81,17 @@ export default function LoginPage() {
         
         console.log("Login successful, redirecting to dashboard...");
         
-        // First try regular navigation
-        try {
-          router.push("/dashboard");
-          router.refresh();
-        } catch (e) {
-          console.error("Router navigation failed, using fallback:", e);
-          // Use window.location as fallback
-          setTimeout(() => {
+        // Short delay to ensure token is stored properly
+        setTimeout(() => {
+          try {
+            router.push("/dashboard");
+            router.refresh();
+          } catch (e) {
+            console.error("Router navigation failed, using fallback:", e);
+            // Use window.location as fallback
             window.location.href = "/dashboard";
-          }, 500);
-        }
+          }
+        }, 300);
       } else {
         toast({
           variant: "destructive",

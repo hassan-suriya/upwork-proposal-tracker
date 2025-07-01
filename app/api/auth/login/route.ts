@@ -51,36 +51,54 @@ export async function POST(req: NextRequest) {
     const token = signToken(tokenPayload);
     console.log("Token generated, length:", token.length);
     
-    // Create response with user data
+    // Create response with user data AND token
     const response = NextResponse.json({
       user: {
         id: user._id,
         email: user.email,
         role: user.role
       },
+      token: token, // Include token in response body for client-side storage
       success: true
     });
+    
+    // Get domain from host header for cookie settings
+    const host = req.headers.get('host') || '';
+    const isProduction = process.env.NODE_ENV === 'production';
+    
+    // In production, we may need to set the domain properly for cookies
+    const cookieOptions = {
+      httpOnly: true,
+      path: '/',
+      secure: true, // Always use secure in production for HTTPS
+      sameSite: 'lax' as const,
+      maxAge: 60 * 60 * 24 * 7 // 7 days for longer sessions
+    };
     
     // Add token cookie to response using Next.js cookies
     response.cookies.set({
       name: 'token',
       value: token,
-      httpOnly: true,
-      path: '/',
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 // 1 day
+      ...cookieOptions
     });
     
     // Also set a non-httpOnly cookie for client-side access
     response.cookies.set({
       name: 'auth-status',
       value: 'logged-in',
-      httpOnly: false,
-      path: '/',
-      secure: process.env.NODE_ENV === 'production',
+      ...cookieOptions,
+      httpOnly: false
+    });
+    
+    // Additionally, include the token in the response JSON for immediate client access
+    response.headers.set('Authorization', `Bearer ${token}`);
+    
+    // Log for debugging
+    console.log("Cookie settings:", {
+      secure: true,
       sameSite: 'lax',
-      maxAge: 60 * 60 * 24 // 1 day
+      path: '/',
+      domain: req.headers.get('host')
     });
     
     console.log("Login successful, cookies set");
