@@ -48,14 +48,6 @@ export default function Home() {
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
       <main className="flex flex-col gap-[32px] row-start-2 items-center max-w-3xl text-center">
         <div className="space-y-6">
-          <Image
-            className="dark:invert mx-auto"
-            src="/next.svg"
-            alt="Upwork Proposal Tracker"
-            width={220}
-            height={46}
-            priority
-          />
           <h1 className="text-4xl font-bold">Yoodule Upwork Proposal Tracker</h1>
           <p className="text-xl text-muted-foreground">
             Track, manage and analyze your Upwork proposals to maximize your success rate
