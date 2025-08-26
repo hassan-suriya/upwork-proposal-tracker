@@ -350,7 +350,7 @@ export default function SettingsPage() {
               <CardHeader>
                 <CardTitle>Display Preferences</CardTitle>
                 <CardDescription>
-                  Customize your Yoodule Upwork Proposal Tracker experience
+                  Customize your Upwork Proposal Tracker experience
                 </CardDescription>
               </CardHeader>
               <CardContent>

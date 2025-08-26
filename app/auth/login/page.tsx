@@ -159,7 +159,7 @@ export default function LoginPage() {
     <div className="w-full max-w-md p-8 space-y-8 bg-card rounded-lg shadow-lg">
       <div className="text-center">
         <h1 className="text-2xl font-bold tracking-tight">
-          Yoodule Upwork Proposal Tracker
+          Upwork Proposal Tracker
         </h1>
         <p className="text-sm text-muted-foreground mt-2">
           Sign in to your account

@@ -1,84 +1,306 @@
-# Upwork Proposal Manager
+# Upwork Proposal Tracker
 
-A Next.js application for tracking and managing Upwork proposals.
+A comprehensive web application built with Next.js for tracking and managing Upwork proposals. This application helps freelancers monitor their proposal activity, analyze success rates, and maintain transparent reporting with clients or team members.
 
-## Getting Started
+![Next.js](https://img.shields.io/badge/Next.js-13-black?style=flat-square&logo=next.js)
+![TypeScript](https://img.shields.io/badge/TypeScript-4.9-blue?style=flat-square&logo=typescript)
+![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-green?style=flat-square&logo=mongodb)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.0-38B2AC?style=flat-square&logo=tailwind-css)
 
-First, clone the repository and install dependencies:
+## 🚀 Features
 
+### 📊 Dashboard & Analytics
+- **Weekly Progress Tracking**: Monitor proposal submissions against weekly targets
+- **Success Rate Analytics**: Track view rates, interview rates, and hire rates
+- **Status Distribution**: Visual breakdown of proposal statuses (Applied, Viewed, Interviewed, Hired, Rejected)
+- **Historical Trends**: 4-week proposal history with visual charts
+- **Daily Activity Charts**: See daily proposal submission patterns
+- **Recent Activity Feed**: Quick overview of the latest proposal updates
+
+### 📝 Proposal Management
+- **Complete CRUD Operations**: Add, edit, view, and delete proposals
+- **Comprehensive Tracking**: 
+  - Date of submission
+  - Job link reference
+  - Proposal status
+  - Bid amount
+  - Custom notes
+- **Advanced Search & Filtering**: Find proposals quickly with search functionality
+- **Pagination Support**: Handle large datasets efficiently
+- **Export Capabilities**: Download proposal data as CSV
+
+### 👥 Multi-User Support
+- **Freelancer Role**: Full access to create, edit, and manage proposals
+- **Viewer Role**: Read-only access for clients or team members to monitor progress
+- **Secure Authentication**: JWT-based authentication system
+- **User Settings**: Customizable weekly targets, display preferences, and currency settings
+
+### 📈 Reporting & Insights
+- **Monthly Reports**: Detailed monthly breakdown by status
+- **Status Distribution Analysis**: Comprehensive proposal status analytics
+- **Response Rate Tracking**: Monitor client engagement with proposals
+- **Performance Metrics**: Calculate average proposal values and success rates
+
+### 🎨 User Experience
+- **Responsive Design**: Works seamlessly on desktop, tablet, and mobile devices
+- **Dark/Light Mode**: Theme toggle for comfortable viewing in any environment
+- **Modern UI**: Built with shadcn/ui components for a clean, professional interface
+- **Loading States**: Smooth user experience with proper loading indicators
+- **Toast Notifications**: Real-time feedback for user actions
+
+## 🛠️ Technology Stack
+
+### Frontend
+- **Next.js 13+**: React framework with App Router
+- **TypeScript**: Type-safe development
+- **Tailwind CSS**: Utility-first CSS framework
+- **shadcn/ui**: High-quality React components
+- **Lucide React**: Beautiful icon library
+- **Chart.js**: Data visualization for analytics
+
+### Backend
+- **Next.js API Routes**: Serverless API endpoints
+- **MongoDB Atlas**: Cloud-hosted NoSQL database
+- **Mongoose**: MongoDB object modeling
+- **JWT Authentication**: Secure token-based authentication
+- **bcrypt**: Password hashing and security
+
+### Development & Deployment
+- **Vercel**: Deployment platform optimized for Next.js
+- **ESLint**: Code linting and quality assurance
+- **PostCSS**: CSS processing and optimization
+
+## 📁 Project Structure
+
+```
+upwork-proposal-tracker/
+├── app/                          # Next.js App Router
+│   ├── api/                      # API routes
+│   │   ├── auth/                # Authentication endpoints
+│   │   ├── proposals/           # Proposal CRUD operations
+│   │   ├── reports/             # Analytics and reporting
+│   │   └── user/                # User management
+│   ├── auth/                    # Authentication pages
+│   ├── dashboard/               # Main application dashboard
+│   │   ├── proposals/           # Proposal management interface
+│   │   ├── reports/             # Analytics and reports
+│   │   ├── settings/            # User settings
+│   │   └── export/              # Data export functionality
+│   ├── globals.css              # Global styles
+│   ├── layout.tsx               # Root layout component
+│   └── page.tsx                 # Landing page
+├── components/                  # Reusable React components
+│   ├── ui/                      # shadcn/ui components
+│   ├── auth-provider.tsx        # Authentication context
+│   ├── navbar.tsx               # Navigation component
+│   ├── proposal-form.tsx        # Proposal creation/editing
+│   ├── proposal-list.tsx        # Proposal display component
+│   └── sidebar.tsx              # Dashboard sidebar
+├── lib/                         # Utility libraries
+│   ├── auth.ts                  # Authentication helpers
+│   ├── client-auth.ts           # Client-side auth utilities
+│   ├── dbConnect.ts             # Database connection
+│   └── utils.ts                 # General utilities
+├── models/                      # Database schemas
+│   ├── Proposal.ts              # Proposal data model
+│   └── User.ts                  # User data model
+├── hooks/                       # Custom React hooks
+│   └── useAuth.ts               # Authentication hook
+└── public/                      # Static assets
+```
+
+## ⚙️ Installation & Setup
+
+### Prerequisites
+- Node.js 18+ and npm
+- MongoDB Atlas account (or local MongoDB installation)
+- Git
+
+### 1. Clone the Repository
 ```bash
-git clone https://github.com/your-username/upwork-proposal-tracker.git
+git clone https://github.com/hassan-suriya/upwork-proposal-tracker.git
 cd upwork-proposal-tracker
+```
+
+### 2. Install Dependencies
+```bash
 npm install
 ```
 
-Then, create a `.env.local` file with the following variables:
+### 3. Environment Configuration
+Create a `.env.local` file in the root directory:
 
-```
+```env
+# Database
 MONGODB_URI=your_mongodb_connection_string
-JWT_SECRET=your_jwt_secret
+
+# Authentication
+JWT_SECRET=your_strong_random_jwt_secret_key
+
+# Optional: Next.js specific
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your_nextauth_secret
 ```
 
-Run the development server:
+### 4. Database Setup
+The application will automatically create the necessary collections when you start using it. Ensure your MongoDB instance is running and accessible.
 
+### 5. Run the Development Server
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to view the application.
 
-## Environment Variables
+### 6. Build for Production
+```bash
+npm run build
+npm start
+```
 
-The following environment variables are required for the application to work properly:
+## 🚀 Deployment
 
-- `MONGODB_URI`: MongoDB connection string
-- `JWT_SECRET`: Secret key for JWT authentication (make this a strong, random string)
+### Vercel Deployment (Recommended)
+1. Push your code to GitHub
+2. Connect your repository to Vercel
+3. Add environment variables in Vercel dashboard
+4. Deploy automatically on every push to main branch
 
-## Production Deployment
+### Other Platforms
+The application can be deployed to any platform that supports Next.js:
+- Netlify
+- Railway
+- DigitalOcean App Platform
+- AWS Amplify
 
-When deploying to production (e.g., Vercel), make sure to set these environment variables in your hosting platform's dashboard.
+## 📖 Usage Guide
 
-**Important for Vercel Deployment:**
-1. Go to your project settings in the Vercel dashboard
-2. Navigate to the "Environment Variables" section
-3. Add both `MONGODB_URI` and `JWT_SECRET` with their respective values
-4. Ensure all API routes use the Node.js runtime (not Edge runtime) by including the following line in each route file:
-   ```typescript
-   export const runtime = 'nodejs';
-   ```
-5. Redeploy your application
+### Getting Started
+1. **Registration**: Create a new account with email and password
+2. **User Role**: Choose between "Freelancer" (full access) or "Viewer" (read-only)
+3. **Setup**: Configure your weekly proposal target in settings
+4. **Add Proposals**: Start tracking your Upwork proposal submissions
 
-## Authentication Troubleshooting
+### For Freelancers
+- Add new proposals with job details, bid amount, and notes
+- Update proposal status as clients respond
+- Monitor your weekly progress against targets
+- Analyze your success rates and performance trends
+- Export data for external analysis
 
-If you experience authentication issues in production:
+### For Viewers (Clients/Team Members)
+- View all proposal activity and statistics
+- Monitor freelancer performance and weekly targets
+- Access reports and analytics dashboard
+- Export proposal data for review
 
-1. **Test Authentication:** Visit `/auth/test` route to verify token storage is working properly
-2. **Check Browser Console:** Look for any errors related to token or cookie access
-3. **Verify Environment Variables:** Make sure `JWT_SECRET` is properly set in production
-4. **Clear Browser Data:** Try clearing cookies and local storage in your browser
-5. **Cookie Issues:** If using a custom domain, ensure cookies are set with the proper domain
+### Key Workflows
 
-### Common Issues and Solutions
+#### Adding a Proposal
+1. Navigate to the Proposals page
+2. Click "Add Proposal"
+3. Fill in the job details:
+   - Submission date
+   - Upwork job link
+   - Bid amount
+   - Initial status (usually "Applied")
+   - Optional notes
+4. Save the proposal
 
-- **"No auth token found in client"**: This usually happens when the client can't store or retrieve the token properly. Make sure you're not in an incognito/private window and that cookies/localStorage are enabled.
-- **Authentication works locally but not in production**: Vercel production environment has stricter security settings. Make sure cookies are set with `secure: true` and proper domain settings.
-- **Token not persisting after refresh**: The application uses multiple token storage methods (in-memory, localStorage, and cookies). If one fails, it will try the others. Check browser console for storage-related errors.
+#### Updating Proposal Status
+1. Find the proposal in the proposals list
+2. Click the edit button
+3. Update the status based on client response:
+   - **Applied**: Initial submission
+   - **Viewed**: Client has viewed your proposal
+   - **Interviewed**: You've been contacted for an interview
+   - **Hired**: You won the project
+   - **Rejected**: Proposal was unsuccessful
+4. Add any relevant notes
+5. Save changes
 
-**Note:** The application uses the `jsonwebtoken` library which requires the Node.js `crypto` module. Since the Edge Runtime in Vercel doesn't support this module, all API routes that use authentication must explicitly specify the Node.js runtime.
+#### Viewing Analytics
+1. Go to the Dashboard for overview metrics
+2. Visit Reports page for detailed analytics
+3. Use the export feature to download data
+4. Adjust date ranges for specific time periods
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🔧 Configuration
 
-## Learn More
+### User Settings
+- **Weekly Target**: Set your goal for proposals per week
+- **Default View**: Choose between list, grid, or calendar view
+- **Currency**: Set your preferred currency for bid amounts
+- **Display Preferences**: Customize the interface to your needs
 
-To learn more about Next.js, take a look at the following resources:
+### Authentication Settings
+- **Password Changes**: Update your password securely
+- **Profile Information**: Manage your account details
+- **Session Management**: Automatic token refresh and secure logout
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🤝 Contributing
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+We welcome contributions to improve the Upwork Proposal Tracker! Here's how you can help:
 
-## Deploy on Vercel
+### Development Setup
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Make your changes and test thoroughly
+4. Commit your changes: `git commit -m 'Add amazing feature'`
+5. Push to the branch: `git push origin feature/amazing-feature`
+6. Open a Pull Request
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Contribution Guidelines
+- Follow TypeScript best practices
+- Maintain consistent code formatting
+- Add tests for new features
+- Update documentation as needed
+- Ensure all existing tests pass
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🐛 Troubleshooting
+
+### Common Issues
+
+#### Authentication Problems
+- **"No auth token found"**: Clear browser cookies and localStorage, then log in again
+- **Token expiration**: The app will automatically refresh tokens, but you may need to log in again
+- **Production authentication issues**: Ensure JWT_SECRET is properly set in production environment
+
+#### Database Connection Issues
+- **MongoDB connection failed**: Verify your MONGODB_URI is correct
+- **Atlas access**: Ensure your IP address is whitelisted in MongoDB Atlas
+- **Network issues**: Check your internet connection and firewall settings
+
+#### Performance Issues
+- **Slow loading**: Check your internet connection and database response times
+- **Memory issues**: Ensure you have sufficient RAM allocated for the Node.js process
+
+### Getting Help
+1. Check the [Issues](https://github.com/hassan-suriya/upwork-proposal-tracker/issues) page for known problems
+2. Search for existing solutions in discussions
+3. Create a new issue with detailed information about your problem
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 👏 Acknowledgments
+
+- **Next.js team** for the amazing React framework
+- **Vercel** for the deployment platform
+- **shadcn** for the beautiful UI components
+- **MongoDB** for the robust database solution
+- **Tailwind CSS** for the utility-first CSS framework
+
+## 📞 Support
+
+If you encounter any issues or have questions:
+
+1. **Documentation**: Check this README and inline code comments
+2. **Issues**: Report bugs or request features via GitHub Issues
+3. **Discussions**: Join community discussions for general questions
+4. **Email**: Contact the maintainer directly for urgent matters
+
+---
+
+**Built with ❤️ for freelancers who want to take control of their Upwork proposal tracking and success analysis.**

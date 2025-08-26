@@ -71,7 +71,7 @@ export default function Navbar() {
     <header className="sticky top-0 z-40 w-full border-b bg-background">
       <div className="container flex h-16 items-center justify-between py-4">
         <Link href="/dashboard" className="flex items-center space-x-2">
-          <span className="font-bold text-xl">Yoodule Upwork Proposal Tracker</span>
+          <span className="font-bold text-xl">Upwork Proposal Tracker</span>
         </Link>
         <div className="flex items-center gap-4">
           <ThemeToggle />

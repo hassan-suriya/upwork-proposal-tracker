@@ -16,7 +16,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Yoodule Upwork Proposal Tracker",
+  title: "Upwork Proposal Tracker",
   description: "Track and manage your Upwork proposals",
 };
 
